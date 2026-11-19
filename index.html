@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>USER – NEU-USER-ENGINE</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --background: #000;
+      --panel: #0b0b0b;
+      --green: #00ff66;
+      --blue: #66ccff;
+      --border: #333;
+      --muted: #aaa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      background: var(--background);
+      color: var(--green);
+      font: 16px/1.5 monospace;
+    }
+
+    h1, h2 { color: var(--blue); }
+    h1 { margin-top: 0; }
+
+    .intro, .hint { color: var(--muted); }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    input {
+      flex: 1 1 280px;
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #111;
+      color: var(--green);
+      font: inherit;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: 1px solid #666;
+      border-radius: 4px;
+      background: #333;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:hover { background: #444; }
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .block {
+      margin: 16px 0;
+      padding: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .sides {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    pre {
+      overflow-x: auto;
+      min-height: 3em;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid #222;
+      background: #050505;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .error { color: #ff7777; }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>USER – NEU-USER-ENGINE</h1>
+    <p class="intro">Dieses Modul analysiert eine Eingabe anhand der enthaltenen Codes.</p>
+
+    <form id="userForm">
+      <label for="userInput">Neu-User-Eingabe</label>
+      <div class="controls">
+        <input
+          id="userInput"
+          type="text"
+          placeholder="Zum Beispiel: Φ + AX + P4"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button type="submit">Start</button>
+        <button type="reset">Zurücksetzen</button>
+      </div>
+      <p class="hint">Tipp: Du kannst die Analyse auch mit Enter starten.</p>
+    </form>
+
+    <section aria-live="polite" aria-atomic="false">
+      <h2>SEEÜ – Starterpanel</h2>
+      <pre id="seeuOut">Noch keine Eingabe.</pre>
+
+      <h2>698869 – BIOS-Menü</h2>
+      <pre id="biosOut">Noch keine Eingabe.</pre>
+
+      <h2>TOOLOMAT DOM – Struktur/Masse</h2>
+      <pre id="domOut">Noch keine Eingabe.</pre>
+
+      <h2>FLÄCHE 48 – Zwei-Seiten-Analyse</h2>
+      <div class="sides">
+        <section class="block">
+          <h3>Seite A</h3>
+          <pre id="fa">Noch keine Eingabe.</pre>
+        </section>
+
+        <section class="block">
+          <h3>Seite B</h3>
+          <pre id="fb">Noch keine Eingabe.</pre>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    const form = document.getElementById("userForm");
+    const input = document.getElementById("userInput");
+
+    const outputs = {
+      seeu: document.getElementById("seeuOut"),
+      bios: document.getElementById("biosOut"),
+      dom: document.getElementById("domOut"),
+      sideA: document.getElementById("fa"),
+      sideB: document.getElementById("fb")
+    };
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      runUser();
+    });
+
+    form.addEventListener("reset", () => {
+      requestAnimationFrame(() => {
+        Object.values(outputs).forEach((output) => {
+          output.textContent = "Noch keine Eingabe.";
+          output.classList.remove("error");
+        });
+        input.focus();
+      });
+    });
+
+    function runUser() {
+      const value = input.value.trim();
+
+      if (!value) {
+        showError("Bitte gib zuerst einen Wert ein.");
+        input.focus();
+        return;
+      }
+
+      Object.values(outputs).forEach((output) => output.classList.remove("error"));
+
+      outputs.seeu.textContent = seeu(value);
+      outputs.bios.textContent = bios(value);
+      outputs.dom.textContent = dom(value);
+      outputs.sideA.textContent = flaeche(value, "A");
+      outputs.sideB.textContent = flaeche(value, "B");
+    }
+
+    function showError(message) {
+      Object.values(outputs).forEach((output) => {
+        output.textContent = message;
+        output.classList.add("error");
+      });
+    }
+
+    function seeu(value) {
+      return [
+        "SEEÜ-SCAN",
+        `Länge: ${[...value].length} Zeichen`,
+        `Orbit: ${orbit(value)}`,
+        `Operator: ${operator(value)}`
+      ].join("\n");
+    }
+
+    function bios(value) {
+      return [
+        "BIOS-Menü",
+        `Achse: ${orbit(value)}`,
+        `RUN: ${runCode(value)}`
+      ].join("\n");
+    }
+
+    function dom(value) {
+      const length = [...value].length;
+
+      return [
+        "DOM-SCAN",
+        `POS = (${length % 12}, φ)`,
+        `MASS = ${length * 3}`,
+        `SCAN = ${length} Zeichen`
+      ].join("\n");
+    }
+
+    function flaeche(value, side) {
+      const length = [...value].length;
+      const isA = side === "A";
+      const pos = (length + (isA ? 3 : 7)) % 16;
+      const mass = length * (isA ? 2 : 4);
+
+      return [
+        `Fläche ${side}`,
+        `POS = (${pos}, φ)`,
+        `MASS = ${mass}`,
+        `Orbit: ${orbit(value)}`,
+        `Operator: ${operator(value)}`,
+        `RUN: ${runCode(value)}`
+      ].join("\n");
+    }
+
+    function orbit(value) {
+      // Spezifischere Codes zuerst prüfen.
+      if (value.includes("φ∞")) return "MA³";
+      if (value.includes("φ²")) return "UC";
+      if (value.includes("Φ")) return "IKI";
+      if (value.includes("φ")) return "BIR";
+      return "none";
+    }
+
+    function operator(value) {
+      if (value.includes("AX")) return "AX";
+      if (value.includes("XA")) return "XA";
+      return "none";
+    }
+
+    function runCode(value) {
+      const codes = [
+        ["P4", "Start"],
+        ["P0", "Wake"],
+        ["P1", "Melt"],
+        ["P2", "Merge"],
+        ["Pe", "End"]
+      ];
+
+      for (const [code, result] of codes) {
+        if (value.includes(code)) return result;
+      }
+
+      return "none";
+    }
+  </script>
+</body>
+</html>
